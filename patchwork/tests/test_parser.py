@@ -84,10 +84,10 @@ def _create_email(msg, msgid=None, sender=None, listid=None):
     return msg
 
 
-def create_email(content, msgid=None, sender=None, listid=None):
+def create_email(content, **kwargs):
     msg = MIMEText(content, _charset='us-ascii')
 
-    return _create_email(msg, msgid, sender, listid)
+    return _create_email(msg, **kwargs)
 
 
 def parse_mail(*args, **kwargs):
