@@ -484,6 +484,39 @@ class MultipleProjectPatchCommentTest(MultipleProjectPatchTest):
                 Comment.objects.filter(submission=patch).count(), 1)
 
 
+class MultipleProjectSameListTest(TestCase):
+    """Test that multiple projects can be handled by the same mailing-list with
+    `subject_prefix` setting"""
+
+    def setUp(self):
+        self.p1 = create_project(listid='test.example.com')
+        self.p2 = create_project(listid='test.example.com',
+                                 subject_prefix='foo')
+        self.p3 = create_project(listid='test.example.com',
+                                 subject_prefix='bar')
+
+    @staticmethod
+    def _parse_mail(subject):
+        email = create_email(content=SAMPLE_DIFF, subject=subject)
+        return parse_mail(email)
+
+    def test_prefix_matching(self):
+        patch = self._parse_mail('[PATCH foo foobar] foo bar')
+        self.assertEqual(patch.project, self.p2)
+        patch = self._parse_mail('[PATCH foobar bar] foo bar')
+        self.assertEqual(patch.project, self.p3)
+
+    def test_prefix_not_matching(self):
+        patch = self._parse_mail('[PATCH foobar] foo bar')
+        self.assertEqual(patch.project, self.p1)
+
+    def test_multiple_matching(self):
+        patch = self._parse_mail('[PATCH foo foobar bar] meep')
+        self.assertEqual(patch.project, self.p2)
+        patch = self._parse_mail('[PATCH bar foobar foo] meep')
+        self.assertEqual(patch.project, self.p3)
+
+
 class ListIdHeaderTest(TestCase):
     """Test that we parse List-Id headers from mails correctly."""
 
@@ -492,25 +525,25 @@ class ListIdHeaderTest(TestCase):
 
     def test_no_list_id(self):
         email = MIMEText('')
-        project = find_project_by_header(email)
+        project = find_project_by_header(email, [])
         self.assertEqual(project, None)
 
     def test_blank_list_id(self):
         email = MIMEText('')
         email['List-Id'] = ''
-        project = find_project_by_header(email)
+        project = find_project_by_header(email, [])
         self.assertEqual(project, None)
 
     def test_whitespace_list_id(self):
         email = MIMEText('')
         email['List-Id'] = ' '
-        project = find_project_by_header(email)
+        project = find_project_by_header(email, [])
         self.assertEqual(project, None)
 
     def test_substring_list_id(self):
         email = MIMEText('')
         email['List-Id'] = 'example.com'
-        project = find_project_by_header(email)
+        project = find_project_by_header(email, [])
         self.assertEqual(project, None)
 
     def test_short_list_id(self):
@@ -518,13 +551,13 @@ class ListIdHeaderTest(TestCase):
            is only the list ID itself (without enclosing angle-brackets). """
         email = MIMEText('')
         email['List-Id'] = self.project.listid
-        project = find_project_by_header(email)
+        project = find_project_by_header(email, [])
         self.assertEqual(project, self.project)
 
     def test_long_list_id(self):
         email = MIMEText('')
         email['List-Id'] = 'Test text <%s>' % self.project.listid
-        project = find_project_by_header(email)
+        project = find_project_by_header(email, [])
         self.assertEqual(project, self.project)
 
 

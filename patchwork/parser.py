@@ -150,17 +150,26 @@ def clean_header(header):
     return normalise_space(header_str)
 
 
-def find_project_by_id(list_id):
-    """Find a `project` object with given `list_id`."""
-    project = None
-    try:
-        project = Project.objects.get(listid=list_id)
-    except Project.DoesNotExist:
-        pass
-    return project
+def find_project_by_id(list_id, prefixes):
+    """Find a `project` object with given `list_id` and optionally matching
+    given `prefixes`.
+
+    If no prefixes matches, return the project with blank prefix.
+    If multiple prefixes matches, display a warning and return the project
+    matching the first prefix.
+    """
+    prefixes = prefixes + ['']
+    projects = Project.objects.filter(listid=list_id,
+                                      subject_prefix__in=prefixes)
+    projects = sorted(projects, key=lambda p: prefixes.index(p.subject_prefix))
+    if not projects:
+        return
+    if len([p for p in projects if p.subject_prefix != '']) > 1:
+        logger.warning('Find multiple projects matching prefixes %s', prefixes)
+    return projects[0]
 
 
-def find_project_by_header(mail):
+def find_project_by_header(mail, prefixes):
     project = None
     listid_res = [re.compile(r'.*<([^>]+)>.*', re.S),
                   re.compile(r'^([\S]+)$', re.S)]
@@ -181,7 +190,7 @@ def find_project_by_header(mail):
 
             listid = match.group(1)
 
-            project = find_project_by_id(listid)
+            project = find_project_by_id(listid, prefixes)
             if project:
                 break
 
@@ -911,10 +920,12 @@ def parse_mail(mail, list_id=None):
         logger.debug("Ignoring email due to 'ignore' hint")
         return
 
+    subject = mail.get('Subject')
+    prefixes = clean_subject(subject)[1]
     if list_id:
-        project = find_project_by_id(list_id)
+        project = find_project_by_id(list_id, prefixes)
     else:
-        project = find_project_by_header(mail)
+        project = find_project_by_header(mail, prefixes)
 
     if project is None:
         logger.error('Failed to find a project for email')
@@ -928,7 +939,6 @@ def parse_mail(mail, list_id=None):
     msgid = msgid[:255]
 
     author = find_author(mail)
-    subject = mail.get('Subject')
     name, prefixes = clean_subject(subject, [project.linkname])
     is_comment = subject_check(subject)
     x, n = parse_series_marker(prefixes)
