@@ -939,7 +939,8 @@ def parse_mail(mail, list_id=None):
     msgid = msgid[:255]
 
     author = find_author(mail)
-    name, prefixes = clean_subject(subject, [project.linkname])
+    name, prefixes = clean_subject(subject,
+                                   [project.linkname, project.subject_prefix])
     is_comment = subject_check(subject)
     x, n = parse_series_marker(prefixes)
     version = parse_version(name, prefixes)

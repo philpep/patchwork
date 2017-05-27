@@ -503,18 +503,23 @@ class MultipleProjectSameListTest(TestCase):
     def test_prefix_matching(self):
         patch = self._parse_mail('[PATCH foo foobar] foo bar')
         self.assertEqual(patch.project, self.p2)
+        self.assertEqual(patch.name, '[foobar] foo bar')
         patch = self._parse_mail('[PATCH foobar bar] foo bar')
         self.assertEqual(patch.project, self.p3)
+        self.assertEqual(patch.name, '[foobar] foo bar')
 
     def test_prefix_not_matching(self):
         patch = self._parse_mail('[PATCH foobar] foo bar')
         self.assertEqual(patch.project, self.p1)
+        self.assertEqual(patch.name, '[foobar] foo bar')
 
     def test_multiple_matching(self):
         patch = self._parse_mail('[PATCH foo foobar bar] meep')
         self.assertEqual(patch.project, self.p2)
+        self.assertEqual(patch.name, '[foobar,bar] meep')
         patch = self._parse_mail('[PATCH bar foobar foo] meep')
         self.assertEqual(patch.project, self.p3)
+        self.assertEqual(patch.name, '[foobar,foo] meep')
 
 
 class ListIdHeaderTest(TestCase):
