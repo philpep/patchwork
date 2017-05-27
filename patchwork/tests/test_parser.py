@@ -75,9 +75,9 @@ def read_mail(filename, project=None):
     return mail
 
 
-def _create_email(msg, msgid=None, sender=None, listid=None):
+def _create_email(msg, msgid=None, sender=None, listid=None, subject=None):
     msg['Message-Id'] = msgid or make_msgid()
-    msg['Subject'] = 'Test subject'
+    msg['Subject'] = subject or 'Test subject'
     msg['From'] = sender or 'Test Author <test-author@example.com>'
     msg['List-Id'] = listid or 'test.example.com'
 
