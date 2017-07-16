@@ -71,13 +71,6 @@ class ProjectMixin(FilterSet):
                             queryset=Project.objects.all())
 
 
-class SeriesFilter(ProjectMixin, TimestampMixin, FilterSet):
-
-    class Meta:
-        model = Series
-        fields = ('submitter', 'project')
-
-
 class CoverLetterFilter(ProjectMixin, TimestampMixin, FilterSet):
 
     class Meta:
@@ -108,6 +101,13 @@ class StateChoiceField(ModelChoiceField):
 class StateFilter(ModelChoiceFilter):
 
     field_class = StateChoiceField
+
+
+class SeriesFilter(ProjectMixin, TimestampMixin, FilterSet):
+
+    class Meta:
+        model = Series
+        fields = ('submitter', 'project')
 
 
 class PatchFilter(ProjectMixin, TimestampMixin, FilterSet):
