@@ -105,9 +105,11 @@ class StateFilter(ModelChoiceFilter):
 
 class SeriesFilter(ProjectMixin, TimestampMixin, FilterSet):
 
+    patches__state = StateFilter(queryset=State.objects.all())
+
     class Meta:
         model = Series
-        fields = ('submitter', 'project')
+        fields = ('submitter', 'project', 'patches__state')
 
 
 class PatchFilter(ProjectMixin, TimestampMixin, FilterSet):

@@ -35,6 +35,7 @@ from patchwork.tests.utils import create_person
 from patchwork.tests.utils import create_project
 from patchwork.tests.utils import create_state
 from patchwork.tests.utils import create_series
+from patchwork.tests.utils import create_series_patch
 from patchwork.tests.utils import create_user
 
 if settings.ENABLE_REST_API:
@@ -559,6 +560,27 @@ class TestSeriesAPI(APITestCase):
         self.assertEqual(status.HTTP_200_OK, resp.status_code)
         self.assertEqual(1, len(resp.data))
         self.assertSerialized(series, resp.data[0])
+
+    def test_filter(self):
+        """Validate we can filter series"""
+        states = [create_state() for _ in range(2)]
+        series = [create_series() for _ in range(3)]
+        for patch_series, patch_states in (
+            (series[0], [states[0]]),
+            (series[1], [states[1]]),
+            (series[2], states)
+        ):
+            for state in patch_states:
+                create_series_patch(series=patch_series,
+                                    patch=create_patch(state=state))
+
+        resp = self.client.get(self.api_url())
+        self.assertEqual([s.pk for s in series],
+                         [s['id'] for s in resp.data])
+        resp = self.client.get(self.api_url(),
+                               {'patches__state': states[0].slug})
+        self.assertEqual([series[0].pk, series[2].pk],
+                         [s['id'] for s in resp.data])
 
     def test_detail(self):
         """Validate we can get a specific series."""
