@@ -19,61 +19,21 @@
 
 import email.parser
 
-from django.utils.translation import ugettext_lazy as _
 from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveUpdateAPIView
-from rest_framework.relations import RelatedField
 from rest_framework.reverse import reverse
 from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.serializers import SerializerMethodField
 
 from patchwork.api.base import PatchworkPermission
+from patchwork.api.fields import StateField
 from patchwork.api.filters import PatchFilter
 from patchwork.api.embedded import PersonSerializer
 from patchwork.api.embedded import ProjectSerializer
 from patchwork.api.embedded import SeriesSerializer
 from patchwork.api.embedded import UserSerializer
 from patchwork.models import Patch
-from patchwork.models import State
 from patchwork.parser import clean_subject
-
-
-def format_state_name(state):
-    return ' '.join(state.split('-'))
-
-
-class StateField(RelatedField):
-    """Avoid the need for a state endpoint.
-
-    NOTE(stephenfin): This field will only function for State names consisting
-    of alphanumeric characters, underscores and single spaces. In Patchwork
-    2.0+, we should consider adding a slug field to the State object and make
-    use of the SlugRelatedField in DRF.
-    """
-    default_error_messages = {
-        'required': _('This field is required.'),
-        'invalid_choice': _('Invalid state {name}. Expected one of: '
-                            '{choices}.'),
-        'incorrect_type': _('Incorrect type. Expected string value, received '
-                            '{data_type}.'),
-    }
-    queryset = ''  # django 1.6, rest_framework 3.2 require this
-
-    def to_internal_value(self, data):
-        try:
-            data = format_state_name(data)
-            return self.get_queryset().get(name__iexact=data)
-        except State.DoesNotExist:
-            self.fail('invalid_choice', name=data, choices=', '.join([
-                format_state_name(x.name) for x in self.get_queryset()]))
-        except (TypeError, ValueError):
-            self.fail('incorrect_type', data_type=type(data).__name__)
-
-    def to_representation(self, obj):
-        return obj.slug
-
-    def get_queryset(self):
-        return State.objects.all()
 
 
 class PatchListSerializer(HyperlinkedModelSerializer):

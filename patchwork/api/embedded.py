@@ -28,6 +28,7 @@ from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.serializers import SerializerMethodField
 
 from patchwork.api.base import CheckHyperlinkedIdentityField
+from patchwork.api.fields import StateField
 from patchwork import models
 
 
