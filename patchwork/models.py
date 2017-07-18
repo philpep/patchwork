@@ -70,8 +70,11 @@ class Project(models.Model):
 
     linkname = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255, unique=True)
-    listid = models.CharField(max_length=255, unique=True)
+    listid = models.CharField(max_length=255)
     listemail = models.CharField(max_length=200)
+    subject_prefix = models.CharField(max_length=255, blank=True, help_text=(
+        'An optional prefix that mail subject must match. This allow to '
+        'handle multiple project under the same list ID'))
 
     # url metadata
 
@@ -100,6 +103,7 @@ class Project(models.Model):
 
     class Meta:
         ordering = ['linkname']
+        unique_together = (('listid', 'subject_prefix'))
 
 
 @python_2_unicode_compatible
