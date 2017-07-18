@@ -17,12 +17,15 @@
 # along with Patchwork; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import email
 import email.parser
 
 from django.utils.translation import ugettext_lazy as _
+from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.relations import RelatedField
+from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.serializers import SerializerMethodField
@@ -35,7 +38,7 @@ from patchwork.api.embedded import SeriesSerializer
 from patchwork.api.embedded import UserSerializer
 from patchwork.models import Patch
 from patchwork.models import State
-from patchwork.parser import clean_subject
+from patchwork.parser import clean_subject, parse_mail
 
 
 def format_state_name(state):
@@ -168,3 +171,13 @@ class PatchDetail(RetrieveUpdateAPIView):
         return Patch.objects.all()\
             .prefetch_related('series', 'check_set')\
             .select_related('project', 'state', 'submitter', 'delegate')
+
+
+@api_view(['POST'])
+def parsemail(request, version=None):
+    if not request.user.is_superuser:
+        return Response({'details': 'unauthorized'}, status=403)
+    for mfile in request.FILES.values():
+        mail = email.message_from_binary_file(mfile.file)
+        parse_mail(mail)
+    return Response()

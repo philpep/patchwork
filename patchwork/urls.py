@@ -201,6 +201,8 @@ if settings.ENABLE_REST_API:
         url(r'^patches/$',
             api_patch_views.PatchList.as_view(),
             name='api-patch-list'),
+        url(r'^parsemail/$',
+            api_patch_views.parsemail),
         url(r'^patches/(?P<pk>[^/]+)/$',
             api_patch_views.PatchDetail.as_view(),
             name='api-patch-detail'),
