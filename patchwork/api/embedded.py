@@ -28,6 +28,7 @@ from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.serializers import SerializerMethodField
 
 from patchwork.api.base import CheckHyperlinkedIdentityField
+from patchwork.api.fields import StateField
 from patchwork import models
 
 
@@ -87,10 +88,11 @@ class CoverLetterSerializer(HyperlinkedModelSerializer):
 
 
 class PatchSerializer(MboxMixin, HyperlinkedModelSerializer):
+    state = StateField()
 
     class Meta:
         model = models.Patch
-        fields = ('id', 'url', 'msgid', 'date', 'name', 'mbox')
+        fields = ('id', 'url', 'msgid', 'date', 'name', 'mbox', 'state')
         read_only_fields = fields
         extra_kwargs = {
             'url': {'view_name': 'api-patch-detail'},

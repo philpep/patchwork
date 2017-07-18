@@ -61,7 +61,8 @@ class SeriesMixin(object):
     serializer_class = SeriesSerializer
 
     def get_queryset(self):
-        return Series.objects.all().prefetch_related('patches',)\
+        return Series.objects.all()\
+            .prefetch_related('patches', 'patches__state')\
             .select_related('submitter', 'cover_letter', 'project')
 
 
